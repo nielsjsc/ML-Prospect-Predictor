@@ -158,18 +158,18 @@ def save_matched_data(hitters_data, pitchers_data, output_hitters_file, output_p
 
 def main():
     # Get absolute path
-    base_dir = os.path.abspath('./data')
+    base_dir = os.path.abspath('./')
     print(f"Base directory: {base_dir}")
     
     prospect_years = range(2017, 2025)
     
     hitter_prospect_files = [
-        os.path.join(base_dir,'batters', f'{year}.csv') 
+        os.path.join(base_dir,'raw//batters', f'{year}.csv') 
         for year in prospect_years
     ]
     
     pitcher_prospect_files = [
-        os.path.join(base_dir,'pitchers', f'{year}.csv')
+        os.path.join(base_dir,'raw//pitchers', f'{year}.csv')
         for year in prospect_years
     ]
     
@@ -177,10 +177,10 @@ def main():
     for path in hitter_prospect_files + pitcher_prospect_files:
         if not os.path.exists(path):
             print(f"Missing file: {path}")
-    mlb_hitters_file = os.path.join(base_dir, 'batters//mlb_batting_data_2000_2024.csv')
-    mlb_pitchers_file = os.path.join(base_dir, 'pitchers//mlb_pitching_data_2000_2024.csv')
-    output_hitters_file = os.path.join(base_dir, 'matched_hitters.csv')
-    output_pitchers_file = os.path.join(base_dir, 'matched_pitchers.csv')
+    mlb_hitters_file = os.path.join(base_dir, 'raw//batters//mlb_batting_data_2000_2024.csv')
+    mlb_pitchers_file = os.path.join(base_dir, 'raw//pitchers//mlb_pitching_data_2000_2024.csv')
+    output_hitters_file = os.path.join(base_dir, 'processed//matched_hitters.csv')
+    output_pitchers_file = os.path.join(base_dir, 'processed//matched_pitchers.csv')
     
     # Ensure directories exist
     os.makedirs(os.path.dirname(output_hitters_file), exist_ok=True)
