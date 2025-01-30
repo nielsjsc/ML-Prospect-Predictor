@@ -59,12 +59,17 @@ def weighted_avg(group, stat_col, weight_col):
 
 def match_prospects_with_mlb(prospects, mlb_stats, position):
     prospects = process_future_grades(prospects, position)
+    prospects = prospects.rename(columns={'Top 100': 'Top_100'})
+    prospects = prospects.rename(columns={'Org Rk': 'Org_Rk'})
+    prospects['Top_100'] = prospects['Top_100'].replace(0, np.nan)
+    
     if position == 'hitter':
+        # Keep original MLBstats columns
         mlb_stats = mlb_stats[['IDfg', 'G', 'PA', 'HR', 'SB', 'AVG', 
                               'OBP', 'SLG', 'wRC+', 'L-WAR', 'BB%', 'K%', 
                               'Season']].copy()
         
-        # Group by IDfg and calculate stats
+        # Keep original groupby with same aggregations
         mlb_stats_grouped = mlb_stats.groupby('IDfg').agg({
             'G': 'sum',
             'L-WAR': 'sum',
@@ -77,9 +82,15 @@ def match_prospects_with_mlb(prospects, mlb_stats, position):
             'wRC+': lambda x: weighted_avg(mlb_stats.loc[x.index], 'wRC+', 'PA'),
             'BB%': lambda x: weighted_avg(mlb_stats.loc[x.index], 'BB%', 'PA'),
             'K%': lambda x: weighted_avg(mlb_stats.loc[x.index], 'K%', 'PA'),
-            'Season': 'min'  # Changed from list to single agg
+            'Season': 'min'
         }).reset_index()
-        # Column renaming for hitters
+
+        # Calculate rate stats
+        mlb_stats_grouped['WAR_150'] = (mlb_stats_grouped['L-WAR'] * 150) / mlb_stats_grouped['G']
+        mlb_stats_grouped['HR_150'] = (mlb_stats_grouped['HR'] * 150) / mlb_stats_grouped['G']
+        mlb_stats_grouped['SB_150'] = (mlb_stats_grouped['SB'] * 150) / mlb_stats_grouped['G']
+
+        # Updated rename dictionary
         rename_dict = {
             'PA_x': 'PA_minors',
             'OBP_x': 'OBP_minors',
@@ -92,13 +103,22 @@ def match_prospects_with_mlb(prospects, mlb_stats, position):
             'SLG_y': 'SLG_mlb',
             'wRC+_y': 'wRC+_mlb',
             'BB%_y': 'BB%_mlb',
-            'K%_y': 'K%_mlb'
+            'K%_y': 'K%_mlb',
+            'AVG': 'AVG_mlb'
         }
         
-        # Calculate per-150 stats
-        mlb_stats_grouped['WAR_150'] = (mlb_stats_grouped['L-WAR'] * 150) / mlb_stats_grouped['G']
-        mlb_stats_grouped['HR_150'] = (mlb_stats_grouped['HR'] * 150) / mlb_stats_grouped['G']
-        mlb_stats_grouped['SB_150'] = (mlb_stats_grouped['SB'] * 150) / mlb_stats_grouped['G']
+        keep_columns = [
+            # Predictors
+            'Age', 'Top_100', 'Org_Rk',
+            'Hit_future', 'Game_future', 'Raw_future', 'Spd_future', 'FV_future',
+            'PA_minors', 'OBP_minors', 'SLG_minors', 'ISO',
+            'BB%_minors', 'K%_minors', 'wRC+_minors',
+            'Year',
+            
+            # Targets
+            'WAR_150', 'wRC+_mlb', 'BB%_mlb', 'K%_mlb',
+            'HR_150', 'SB_150', 'AVG_mlb', 'OBP_mlb', 'SLG_mlb'
+        ]
         
     else:  # pitcher
         mlb_stats = mlb_stats[['IDfg', 'G', 'IP', 'ERA', 'K%', 'BB%', 'GB%', 'WAR', 'Season']].copy()
@@ -113,22 +133,35 @@ def match_prospects_with_mlb(prospects, mlb_stats, position):
             'GB%': lambda x: weighted_avg(mlb_stats.loc[x.index], 'GB%', 'IP'),
             'Season': 'min'
         }).reset_index()
+        
+        mlb_stats_grouped['WAR_150'] = (mlb_stats_grouped['WAR'] * 150) / mlb_stats_grouped['G']
+
         rename_dict = {
             'IP_x': 'IP_minors',
             'K%_x': 'K%_minors',
             'BB%_x': 'BB%_minors',
             'GB%_x': 'GB%_minors',
             'ERA_x': 'ERA_minors',
+            'xFIP': 'xFIP_minors',
             'IP_y': 'IP_mlb',
             'ERA_y': 'ERA_mlb',
             'K%_y': 'K%_mlb',
             'BB%_y': 'BB%_mlb',
             'GB%_y': 'GB%_mlb'
         }
-
         
-        mlb_stats_grouped['WAR_150'] = (mlb_stats_grouped['WAR'] * 150) / mlb_stats_grouped['G']
+        keep_columns = [
+            # Predictors
+            'Age', 'Top_100', 'Org_Rk',
+            'FB_future', 'SL_future', 'CB_future', 'CH_future', 'CMD_future', 'FV_future',
+            'IP_minors', 'ERA_minors', 'xFIP_minors', 'K%_minors', 'BB%_minors', 'GB%_minors',
+            'Year',
+            
+            # Targets
+            'WAR_150', 'ERA_mlb', 'K%_mlb', 'BB%_mlb', 'GB%_mlb'
+        ]
 
+    # Merge datasets
     matched_df = pd.merge(
         prospects,
         mlb_stats_grouped,
@@ -140,15 +173,8 @@ def match_prospects_with_mlb(prospects, mlb_stats, position):
     # Rename columns
     matched_df = matched_df.rename(columns=rename_dict)
     
-
-    
-    # Fill NaN values
-    matched_df = matched_df.fillna({
-        'G': 0,
-        'WAR_150': 0,
-        'HR_150': 0 if position == 'hitter' else None,
-        'SB_150': 0 if position == 'hitter' else None
-    })
+    # Filter columns
+    matched_df = matched_df[keep_columns]
     
     return matched_df
 
