@@ -102,9 +102,9 @@ def generate_poor_performance(df, column, position, percentile=10):
     # Define which stats are "higher is better" for each position
     hitter_higher_better = {
         'WAR_150': True,
-        'wRC+_mlb': True,
-        'BB%_mlb': True,   # Hitters want high BB%
-        'K%_mlb': False,   # Hitters want low K%
+        'wRC_plus_mlb': True,
+        'BB_pct_mlb': True,
+        'K_pct_mlb': False,
         'HR_150': True,
         'SB_150': True,
         'AVG_mlb': True,
@@ -115,9 +115,9 @@ def generate_poor_performance(df, column, position, percentile=10):
     pitcher_higher_better = {
         'WAR_150': True,
         'ERA_mlb': False,
-        'K%_mlb': True,    # Pitchers want high K%
-        'BB%_mlb': False,  # Pitchers want low BB%
-        'GB%_mlb': True
+        'K_pct_mlb': True,
+        'BB_pct_mlb': False,
+        'GB_pct_mlb': True
     }
     
     # Select appropriate mapping
@@ -143,9 +143,9 @@ def fill_missing_performance(df, position):
     if position == 'hitter':
         target_cols = {
             'WAR_150': True,
-            'wRC+_mlb': True,
-            'BB%_mlb': True,
-            'K%_mlb': False,
+            'wRC_plus_mlb': True,
+            'BB_pct_mlb': True,
+            'K_pct_mlb': False,
             'HR_150': True,
             'SB_150': True,
             'AVG_mlb': True,
@@ -156,9 +156,9 @@ def fill_missing_performance(df, position):
         target_cols = {
             'WAR_150': True,
             'ERA_mlb': False,
-            'K%_mlb': True,
-            'BB%_mlb': False,
-            'GB%_mlb': True
+            'K_pct_mlb': True,
+            'BB_pct_mlb': False,
+            'GB_pct_mlb': True
         }
     
     # Debug information
@@ -240,15 +240,15 @@ def match_prospects_with_mlb(prospects, mlb_stats, position):
             'PA_x': 'PA_minors',
             'OBP_x': 'OBP_minors',
             'SLG_x': 'SLG_minors',
-            'BB%_x': 'BB%_minors',
-            'K%_x': 'K%_minors',
-            'wRC+_x': 'wRC+_minors',
+            'BB%_x': 'BB_pct_minors',
+            'K%_x': 'K_pct_minors',
+            'wRC+_x': 'wRC_plus_minors',
             'PA_y': 'PA_mlb',
             'OBP_y': 'OBP_mlb',
             'SLG_y': 'SLG_mlb',
-            'wRC+_y': 'wRC+_mlb',
-            'BB%_y': 'BB%_mlb',
-            'K%_y': 'K%_mlb',
+            'wRC+_y': 'wRC_plus_mlb',
+            'BB%_y': 'BB_pct_mlb',
+            'K%_y': 'K_pct_mlb',
             'AVG': 'AVG_mlb'
         }
         
@@ -257,11 +257,11 @@ def match_prospects_with_mlb(prospects, mlb_stats, position):
             'Age', 'Top_100', 'Org_Rk',
             'Hit_future', 'Game_future', 'Raw_future', 'Spd_future', 'FV_future',
             'PA_minors', 'OBP_minors', 'SLG_minors', 'ISO',
-            'BB%_minors', 'K%_minors', 'wRC+_minors',
+            'BB_pct_minors', 'K_pct_minors', 'wRC_plus_minors',
             'Year',
             
             # Targets
-            'WAR_150', 'wRC+_mlb', 'BB%_mlb', 'K%_mlb',
+            'WAR_150', 'wRC_plus_mlb', 'BB_pct_mlb', 'K_pct_mlb',
             'HR_150', 'SB_150', 'AVG_mlb', 'OBP_mlb', 'SLG_mlb'
         ]
         
@@ -283,27 +283,27 @@ def match_prospects_with_mlb(prospects, mlb_stats, position):
 
         rename_dict = {
             'IP_x': 'IP_minors',
-            'K%_x': 'K%_minors',
-            'BB%_x': 'BB%_minors',
-            'GB%_x': 'GB%_minors',
+            'K%_x': 'K_pct_minors',
+            'BB%_x': 'BB_pct_minors',
+            'GB%_x': 'GB_pct_minors',
             'ERA_x': 'ERA_minors',
             'xFIP': 'xFIP_minors',
             'IP_y': 'IP_mlb',
             'ERA_y': 'ERA_mlb',
-            'K%_y': 'K%_mlb',
-            'BB%_y': 'BB%_mlb',
-            'GB%_y': 'GB%_mlb'
+            'K%_y': 'K_pct_mlb',
+            'BB%_y': 'BB_pct_mlb',
+            'GB%_y': 'GB_pct_mlb'
         }
         
         keep_columns = [
             # Predictors
             'Age', 'Top_100', 'Org_Rk',
             'FB_future', 'SL_future', 'CB_future', 'CH_future', 'CMD_future', 'FV_future',
-            'IP_minors', 'ERA_minors', 'xFIP_minors', 'K%_minors', 'BB%_minors', 'GB%_minors',
+            'IP_minors', 'ERA_minors', 'xFIP_minors', 'K_pct_minors', 'BB_pct_minors', 'GB_pct_minors',
             'Year',
             
             # Targets
-            'WAR_150', 'ERA_mlb', 'K%_mlb', 'BB%_mlb', 'GB%_mlb'
+            'WAR_150', 'ERA_mlb', 'K_pct_mlb', 'BB_pct_mlb', 'GB_pct_mlb'
         ]
 
     # Merge datasets

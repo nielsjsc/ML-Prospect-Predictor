@@ -18,16 +18,16 @@ HITTER_FEATURES = [
     'OBP_minors',
     'SLG_minors',
     'ISO',
-    'BB%_minors',
-    'K%_minors',
-    'wRC+_minors'
+    'BB_pct_minors',
+    'K_pct_minors',
+    'wRC_plus_minors'
 ]
 
 HITTER_TARGETS = [
     'WAR_150',
-    'wRC+_mlb',
-    'BB%_mlb',
-    'K%_mlb',
+    'wRC_plus_mlb',
+    'BB_pct_mlb',
+    'K_pct_mlb',
     'HR_150',
     'SB_150',
     'AVG_mlb',
@@ -47,21 +47,21 @@ PITCHER_FEATURES = [
     'IP_minors',
     'ERA_minors',
     'xFIP_minors',
-    'K%_minors',
-    'BB%_minors',
-    'GB%_minors'
+    'K_pct_minors',
+    'BB_pct_minors',
+    'GB_pct_minors'
 ]
 
 PITCHER_TARGETS = [
     'WAR_150',
     'ERA_mlb',
-    'K%_mlb',
-    'BB%_mlb',
-    'GB%_mlb'
+    'K_pct_mlb',
+    'BB_pct_mlb',
+    'GB_pct_mlb'
 ]
 
 TIME_SPLIT = {
     'column': 'Year',
     'training_fraction': 0.8,
-    'split_year': 2022  # Train on data before 2022, validate on 2022+
+    'split_year': 2022
 }
