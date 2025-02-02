@@ -26,68 +26,72 @@ def load_data(prospect_files, mlb_hitters_file, mlb_pitchers_file):
     prospects = pd.concat(prospects_list, ignore_index=True)
     
     return prospects, mlb_hitters, mlb_pitchers
-def analyze_missing_values(df, position):
-    """Print missing value analysis for dataset"""
-    print(f"\n{position.capitalize()} Dataset Missing Values:")
-    missing = df.isnull().sum()
-    missing_pct = (missing / len(df)) * 100
-    
-    print("\nMissing by column:")
-    for col in df.columns:
-        if missing[col] > 0:
-            print(f"{col}: {missing[col]} ({missing_pct[col]:.1f}%)")
-    
-    print(f"\nTotal rows: {len(df)}")
-    print(f"Rows with any missing: {df.isnull().any(axis=1).sum()} ({df.isnull().any(axis=1).mean()*100:.1f}%)")
 
-def process_missing_values(df, position):
-    """Handle missing values in prospect data"""
-    print(f"\nProcessing missing values for {position} data:")
-    
-    # Handle Top 100 rankings
-    df['Top_100'] = df['Top_100'].fillna(250)
-    print("Filled Top 100 rankings with 250")
-    
-    if position == 'pitcher':
-        # Get future grade columns
-        future_cols = ['FB_future', 'SL_future', 'CB_future', 'CH_future', 'CMD_future']
-        
-        # Print medians before imputation
-        print("\nMedian values for imputation:")
-        for col in future_cols:
-            median = df[col].median()
-            print(f"{col}: {median:.1f}")
-            df[col] = df[col].fillna(median)
-    
-    # Verify imputation
-    missing = df.isnull().sum()
-    print("\nRemaining missing values:")
-    for col in df.columns:
-        if missing[col] > 0:
-            print(f"{col}: {missing[col]} ({missing[col]/len(df)*100:.1f}%)")
-    
-    return df
-def process_future_grades(df, position):
-    """Extract future grades from grade columns"""
+def process_prospect_data(df, position):
+    """Single function to handle all data processing"""
+    # 1. Process grades
     if position == 'hitter':
         grade_columns = ['Hit', 'Game', 'Raw', 'Spd', 'FV']
     else:
         grade_columns = ['FB', 'SL', 'CB', 'CH', 'CMD', 'FV']
     
+    # Extract future grades
     for col in grade_columns:
         if col in df.columns:
             if col == 'FV':
-                # Handle FV with plus grades
                 df[f'{col}_future'] = df[col].apply(lambda x: float(x.replace('+', '')) + 2.5 
                                                   if '+' in str(x) else float(x))
             else:
-                # Handle regular tool grades
                 df[f'{col}_future'] = df[col].str.split('/').str[1].astype(float)
-            # Drop original column
             df = df.drop(columns=[col])
     
+    # 2. Fill predictor nulls
+    df['Top_100'] = df['Top_100'].fillna(250)
+    
+    if position == 'pitcher':
+        future_cols = [f'{col}_future' for col in grade_columns]
+        stat_cols = ['IP_minors', 'ERA_minors', 'xFIP_minors', 
+                    'K_pct_minors', 'BB_pct_minors', 'GB_pct_minors']
+        
+        for col in future_cols + stat_cols:
+            if col in df.columns:
+                df[col] = df[col].fillna(df[col].median())
+    
+    # 3. Fill performance metrics
+    target_cols = {
+        'hitter': {
+            'WAR_150': True, 'wRC_plus_mlb': True, 'BB_pct_mlb': True,
+            'K_pct_mlb': False, 'HR_150': True, 'SB_150': True,
+            'AVG_mlb': True, 'OBP_mlb': True, 'SLG_mlb': True
+        },
+        'pitcher': {
+            'WAR_150': True, 'ERA_mlb': False, 'K_pct_mlb': True,
+            'BB_pct_mlb': False, 'GB_pct_mlb': True
+        }
+    }
+    
+    # Clip WAR first
+    if 'WAR_150' in df.columns:
+        df['WAR_150'] = df['WAR_150'].clip(-10, 10)
+    if 'wRC_plus_mlb' in df.columns:
+        df['wRC_plus_mlb'] = df['wRC_plus_mlb'].clip(0, 300)
+    if 'ERA_mlb' in df.columns:
+        df['ERA_mlb'] = df['ERA_mlb'].clip(0, 20)
+    # Fill target nulls
+    for col, higher_better in target_cols[position].items():
+        if col in df.columns:
+            valid_data = df[col].dropna()
+            if len(valid_data) > 0:
+                n_missing = df[col].isna().sum()
+                threshold = np.percentile(valid_data, 25 if higher_better else 75)
+                poor_values = np.random.uniform(
+                    valid_data.min() if higher_better else threshold,
+                    threshold if higher_better else valid_data.max(),
+                    size=n_missing
+                )
+                df.loc[df[col].isna(), col] = poor_values
+    
     return df
-
 
 def weighted_avg(group, stat_col, weight_col):
     """Calculate weighted average handling zero weights"""
@@ -95,115 +99,11 @@ def weighted_avg(group, stat_col, weight_col):
     if weights.sum() == 0:
         return 0
     return np.average(group[stat_col], weights=weights)
-def generate_poor_performance(df, column, position, percentile=10):
-    """Generate random poor performance values based on position"""
-    valid_data = df[column].dropna()
-    
-    # Define which stats are "higher is better" for each position
-    hitter_higher_better = {
-        'WAR_150': True,
-        'wRC_plus_mlb': True,
-        'BB_pct_mlb': True,
-        'K_pct_mlb': False,
-        'HR_150': True,
-        'SB_150': True,
-        'AVG_mlb': True,
-        'OBP_mlb': True,
-        'SLG_mlb': True
-    }
-    
-    pitcher_higher_better = {
-        'WAR_150': True,
-        'ERA_mlb': False,
-        'K_pct_mlb': True,
-        'BB_pct_mlb': False,
-        'GB_pct_mlb': True
-    }
-    
-    # Select appropriate mapping
-    higher_better = hitter_higher_better if position == 'hitter' else pitcher_higher_better
-    
-    # Generate poor performance based on whether higher or lower is better
-    if higher_better.get(column, True):  # Default to higher=better if not specified
-        threshold = np.percentile(valid_data, percentile)
-        min_val = min(valid_data)
-        return np.random.uniform(min_val, threshold, size=df[column].isna().sum())
-    else:
-        threshold = np.percentile(valid_data, 100-percentile)
-        max_val = max(valid_data)
-        return np.random.uniform(threshold, max_val, size=df[column].isna().sum())
 
-
-
-
-def fill_missing_performance(df, position):
-    """Fill missing MLB stats with poor performance values"""
-    print(f"\nFilling missing {position} MLB stats with bottom 10% random values")
-    
-    if position == 'hitter':
-        target_cols = {
-            'WAR_150': True,
-            'wRC_plus_mlb': True,
-            'BB_pct_mlb': True,
-            'K_pct_mlb': False,
-            'HR_150': True,
-            'SB_150': True,
-            'AVG_mlb': True,
-            'OBP_mlb': True,
-            'SLG_mlb': True
-        }
-    else:
-        target_cols = {
-            'WAR_150': True,
-            'ERA_mlb': False,
-            'K_pct_mlb': True,
-            'BB_pct_mlb': False,
-            'GB_pct_mlb': True
-        }
-    
-    # Debug information
-    print("\nBefore filling:")
-    missing_before = df[list(target_cols.keys())].isnull().sum()
-    print(missing_before)
-    
-    # Fill each column
-    for col, higher_better in target_cols.items():
-        if col not in df.columns:
-            print(f"Warning: Column {col} not found in dataframe")
-            continue
-            
-        valid_data = df[col].dropna()
-        if len(valid_data) == 0:
-            print(f"Warning: No valid data for {col}")
-            continue
-            
-        # Generate poor performance values
-        n_missing = df[col].isna().sum()
-        if higher_better:
-            threshold = np.percentile(valid_data, 10)
-            min_val = valid_data.min()
-            poor_values = np.random.uniform(min_val, threshold, size=n_missing)
-        else:
-            threshold = np.percentile(valid_data, 90)
-            max_val = valid_data.max()
-            poor_values = np.random.uniform(threshold, max_val, size=n_missing)
-        
-        # Fill missing values
-        df.loc[df[col].isna(), col] = poor_values
-        
-        # Verify fill
-        still_missing = df[col].isnull().sum()
-        print(f"\n{col}:")
-        print(f"Missing before: {n_missing}")
-        print(f"Still missing: {still_missing}")
-        print(f"Values filled: {n_missing - still_missing}")
-    
-    return df
 
 
 
 def match_prospects_with_mlb(prospects, mlb_stats, position):
-    prospects = process_future_grades(prospects, position)
     prospects = prospects.rename(columns={'Top 100': 'Top_100'})
     prospects = prospects.rename(columns={'Org Rk': 'Org_Rk'})
     prospects['Top_100'] = prospects['Top_100'].replace(0, np.nan)
@@ -254,7 +154,7 @@ def match_prospects_with_mlb(prospects, mlb_stats, position):
         
         keep_columns = [
             # Predictors
-            'Age', 'Top_100', 'Org_Rk',
+            'Name','Age', 'Top_100', 'Org_Rk',
             'Hit_future', 'Game_future', 'Raw_future', 'Spd_future', 'FV_future',
             'PA_minors', 'OBP_minors', 'SLG_minors', 'ISO',
             'BB_pct_minors', 'K_pct_minors', 'wRC_plus_minors',
@@ -279,7 +179,7 @@ def match_prospects_with_mlb(prospects, mlb_stats, position):
             'Season': 'min'
         }).reset_index()
         
-        mlb_stats_grouped['WAR_150'] = (mlb_stats_grouped['WAR'] * 150) / mlb_stats_grouped['G']
+        mlb_stats_grouped['WAR_150'] = (mlb_stats_grouped['WAR'] * 150) / mlb_stats_grouped['IP']
 
         rename_dict = {
             'IP_x': 'IP_minors',
@@ -297,7 +197,7 @@ def match_prospects_with_mlb(prospects, mlb_stats, position):
         
         keep_columns = [
             # Predictors
-            'Age', 'Top_100', 'Org_Rk',
+            'Name','Age', 'Top_100', 'Org_Rk',
             'FB_future', 'SL_future', 'CB_future', 'CH_future', 'CMD_future', 'FV_future',
             'IP_minors', 'ERA_minors', 'xFIP_minors', 'K_pct_minors', 'BB_pct_minors', 'GB_pct_minors',
             'Year',
@@ -318,18 +218,12 @@ def match_prospects_with_mlb(prospects, mlb_stats, position):
     # Rename columns
     matched_df = matched_df.rename(columns=rename_dict)
     
-    # After merging, before processing
-    print(f"\nMatched {position} data shape before processing: {matched_df.shape}")
-    print("Year distribution:")
-    print(matched_df['Year'].value_counts().sort_index())
+
     
     # Process missing values
-    matched_df = process_missing_values(matched_df, position)
-    matched_df = fill_missing_performance(matched_df, position)
+    matched_df = process_prospect_data(matched_df, position)
     
-    print(f"\nMatched {position} data shape after processing: {matched_df.shape}")
-    print("\nColumns with missing values:")
-    print(matched_df.isnull().sum()[matched_df.isnull().sum() > 0])
+
     
     matched_df = matched_df[keep_columns]
     return matched_df
