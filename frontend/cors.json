@@ -1,0 +1,12 @@
+[
+  {
+    "origin": [
+      "http://localhost:3001",
+      "https://mlb-prospect-predictor-001.web.app",
+      "https://mlb-prospect-predictor-001.firebaseapp.com"
+    ],
+    "method": ["GET"],
+    "maxAgeSeconds": 3600,
+    "responseHeader": ["Content-Type"]
+  }
+]
