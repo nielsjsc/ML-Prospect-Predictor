@@ -34,12 +34,12 @@ const Layout = ({ children }: LayoutProps) => {
         sx={{ 
           py: 2, 
           textAlign: 'center',
-          bgcolor: '#041E42',  // MLB Blue
+          bgcolor: '#041E42',  
           color: 'white',
           mt: 'auto'
         }}
       >
-        MLB Prospect Predictor © 2024
+        Baseball Prospect Predictor
       </Box>
     </Box>
   );

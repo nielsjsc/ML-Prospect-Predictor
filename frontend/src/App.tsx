@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import Layout from './components/Layout';
 import Home from './pages/Home';
+import About from './pages/About';
+import ProspectRankings from './pages/ProspectRankings';
+import PlayerPage from './pages/PlayerPage';
 import { ProspectFilters, ProspectType } from './types/filters';
+import { ProspectProvider } from './context/ProspectContext';
 
 // Theme configuration
 const theme = createTheme({
@@ -38,19 +42,28 @@ const initialFilters: ProspectFilters = {
 };
 
 function App() {
-  const [filters, setFilters] = useState<ProspectFilters>(initialFilters);
+  const [filters, setFilters] = useState<ProspectFilters>({
+    type: 'hitter' as ProspectType,
+    grades: {},
+  });
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <BrowserRouter>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Home filters={filters} onFilterChange={setFilters} />} />
-            {/* Add other routes */}
-          </Routes>
-        </Layout>
-      </BrowserRouter>
+      <ProspectProvider>
+        <BrowserRouter basename={process.env.PUBLIC_URL}>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<Home filters={filters} onFilterChange={setFilters} />} />
+              <Route path="/prospects" element={<Navigate to="/prospects/hitters" replace />} />
+              <Route path="/prospects/:type" element={<ProspectRankings />} />
+              <Route path="/player/:name" element={<PlayerPage />} />
+              <Route path="/about" element={<About />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Layout>
+        </BrowserRouter>
+      </ProspectProvider>
     </ThemeProvider>
   );
 }
