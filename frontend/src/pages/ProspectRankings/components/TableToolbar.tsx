@@ -1,25 +1,20 @@
-import React from 'react';
-import { 
-  Box, 
-  TextField, 
-  IconButton, 
-  Tooltip,
-  Button,
-  ButtonGroup
-} from '@mui/material';
+import { FC } from 'react';
+import { Box, TextField, ButtonGroup, Button, IconButton, Tooltip } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import SearchIcon from '@mui/icons-material/Search';
 import { ProspectFilters } from '../../../types/filters';
 
 interface TableToolbarProps {
   filters: ProspectFilters;
+  showFilters: boolean;
   onFilterChange: (filters: ProspectFilters) => void;
-  onSearchChange: (value: string) => void;
+  onSearchChange: (term: string) => void;
   onToggleFilters: () => void;
 }
 
-const TableToolbar: React.FC<TableToolbarProps> = ({
+const TableToolbar: FC<TableToolbarProps> = ({
   filters,
+  showFilters,  // Add this prop
   onFilterChange,
   onSearchChange,
   onToggleFilters
@@ -61,11 +56,14 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
       </Box>
 
       <Box>
-        <Tooltip title="Show filters">
-          <IconButton onClick={onToggleFilters}>
-            <FilterListIcon />
-          </IconButton>
-        </Tooltip>
+      <Tooltip title={showFilters ? "Hide filters" : "Show filters"}>
+        <IconButton 
+          onClick={onToggleFilters}
+          color={showFilters ? "primary" : "default"}
+        >
+          <FilterListIcon />
+        </IconButton>
+      </Tooltip>
       </Box>
     </Box>
   );

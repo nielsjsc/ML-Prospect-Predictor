@@ -9,7 +9,7 @@ const Navigation = () => {
     <AppBar 
       position="static" 
       sx={{ 
-        backgroundColor: '#041E42',  // MLB Blue
+        backgroundColor: '#041E42',
         marginBottom: 2 
       }}
     >
@@ -25,15 +25,15 @@ const Navigation = () => {
             fontWeight: 'bold'
           }}
         >
-          MLB Prospect Predictor
+          Baseball Prospect Predictor
         </Typography>
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button 
             color="inherit" 
             component={Link} 
-            to="/predictions/hitters"
+            to="/prospects/hitters"
             sx={{ 
-              backgroundColor: location.pathname === '/predictions/hitters' 
+              backgroundColor: location.pathname === '/prospects/hitters' 
                 ? 'rgba(255,255,255,0.1)' 
                 : 'transparent',
               '&:hover': {
@@ -46,9 +46,9 @@ const Navigation = () => {
           <Button 
             color="inherit" 
             component={Link} 
-            to="/predictions/pitchers"
+            to="/prospects/pitchers"
             sx={{ 
-              backgroundColor: location.pathname === '/predictions/pitchers' 
+              backgroundColor: location.pathname === '/prospects/pitchers' 
                 ? 'rgba(255,255,255,0.1)' 
                 : 'transparent',
               '&:hover': {
@@ -63,6 +63,9 @@ const Navigation = () => {
             component={Link} 
             to="/about"
             sx={{
+              backgroundColor: location.pathname === '/about' 
+                ? 'rgba(255,255,255,0.1)' 
+                : 'transparent',
               '&:hover': {
                 backgroundColor: 'rgba(255,255,255,0.2)'
               }

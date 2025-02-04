@@ -1,4 +1,4 @@
-import { Prospect, HitterProspect, PitcherProspect } from '../../../types/prospects';
+import { Prospect} from '../../../types/prospects';
 import { ProspectFilters } from '../../../types/filters';
 
 export const filterProspects = (
@@ -13,7 +13,7 @@ export const filterProspects = (
     }
 
     // Organization filter
-    if (filters.organization && prospect.Organization !== filters.organization) {
+    if (filters.organization && prospect.Org !== filters.organization) {
       return false;
     }
 

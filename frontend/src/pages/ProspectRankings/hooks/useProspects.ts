@@ -1,22 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Prospect } from '../../../types/prospects';
 import { ProspectFilters } from '../../../types/filters';
-import { fetchProspects } from '../../../services/prospectService';
+import { fetchProspects } from '../../../services/firebase';
 import { filterProspects } from '../utils/tableHelpers';
 
-interface UseProspectsReturn {
-  prospects: Prospect[];
-  loading: boolean;
-  error: string | null;
-  refreshData: () => Promise<void>;
-}
-
-export const useProspects = (filters: ProspectFilters): UseProspectsReturn => {
+export const useProspects = (filters: ProspectFilters) => {
   const [prospects, setProspects] = useState<Prospect[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadProspects = async () => {
+  const loadProspects = useCallback(async () => {
     try {
       setLoading(true);
       const data = await fetchProspects(filters.type);
@@ -29,16 +22,11 @@ export const useProspects = (filters: ProspectFilters): UseProspectsReturn => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
 
   useEffect(() => {
     loadProspects();
-  }, [filters.type]);
+  }, [loadProspects]);
 
-  return {
-    prospects,
-    loading,
-    error,
-    refreshData: loadProspects
-  };
+  return { prospects, loading, error, refreshData: loadProspects };
 };

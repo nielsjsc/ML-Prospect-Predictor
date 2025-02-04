@@ -1,37 +1,51 @@
 export interface BaseProspect {
     Name: string;
     Age: number;
-    Organization: string;
+    Org: string;
     Top_100: number;
     Org_Rk: number;
     FV_future: number;
+    Pos: string;
 }
 
-export interface HitterProspect extends BaseProspect {
-    Hit_future: number;
-    Game_future: number;
-    Raw_future: number;
-    Spd_future: number;
+interface MinorLeagueHitterStats {
+    PA: number;
+    OBP: number;
+    SLG: number;
+    ISO: number;
+    BB_pct: number;
+    K_pct: number;
+    wRC_plus: number;
+}
+
+interface MinorLeaguePitcherStats {
+    IP: number;
+    K_pct: number;
+    BB_pct: number;
+    GB_pct: number;
+    ERA: number;
+    xFIP: number;
+}
+
+export interface HitterProspect extends BaseProspect, MinorLeagueHitterStats {
+    Hit: string;
+    Game: string;
+    Raw: string;
+    Spd: string;
+    FV: string;
     Predicted_WAR: number;
-    Predicted_WAR_Lower: number;
-    Predicted_WAR_Upper: number;
     Predicted_wRC: number;
-    Predicted_wRC_Lower: number;
-    Predicted_wRC_Upper: number;
 }
 
-export interface PitcherProspect extends BaseProspect {
-    FB_future: number;
-    SL_future: number;
-    CB_future: number;
-    CH_future: number;
-    CMD_future: number;
+export interface PitcherProspect extends BaseProspect, MinorLeaguePitcherStats {
+    FB: string;
+    SL: string;
+    CB: string;
+    CH: string;
+    CMD: string;
+    FV: string;
     Predicted_WAR: number;
-    Predicted_WAR_Lower: number;
-    Predicted_WAR_Upper: number;
     Predicted_ERA: number;
-    Predicted_ERA_Lower: number;
-    Predicted_ERA_Upper: number;
 }
 
 export type ProspectType = 'hitter' | 'pitcher';

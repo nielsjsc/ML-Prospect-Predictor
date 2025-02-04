@@ -13,35 +13,22 @@ const Home: React.FC<HomeProps> = ({ filters, onFilterChange }) => {
 
   return (
     <Box>
-      <Paper 
-        elevation={0}
-        sx={{ 
-          p: 4, 
-          mb: 4, 
-          bgcolor: '#041E42',
-          color: 'white',
-          borderRadius: 2
-        }}
-      >
+      <Paper elevation={0} sx={{ p: 4, mb: 4, bgcolor: '#041E42', color: 'white', borderRadius: 2 }}>
         <Typography variant="h3" gutterBottom>
-          MLB Prospect Predictor
+          Baseball Prospect Predictor
         </Typography>
         <Typography variant="h6" sx={{ mb: 3 }}>
-          Leverage machine learning to predict MLB prospect performance
+          Leverage machine learning to predict prospect performance
         </Typography>
       </Paper>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <Paper 
-            sx={{ 
-              p: 3, 
-              cursor: 'pointer',
-              '&:hover': { transform: 'translateY(-4px)', transition: '0.3s' }
-            }}
+            sx={{ p: 3, cursor: 'pointer', '&:hover': { transform: 'translateY(-4px)', transition: '0.3s' } }}
             onClick={() => {
               onFilterChange({ ...filters, type: 'hitter' });
-              navigate('/predictions/hitters');
+              navigate('/prospects/hitters');
             }}
           >
             <Typography variant="h5" gutterBottom color="primary">
@@ -58,14 +45,10 @@ const Home: React.FC<HomeProps> = ({ filters, onFilterChange }) => {
 
         <Grid item xs={12} md={6}>
           <Paper 
-            sx={{ 
-              p: 3,
-              cursor: 'pointer',
-              '&:hover': { transform: 'translateY(-4px)', transition: '0.3s' }
-            }}
+            sx={{ p: 3, cursor: 'pointer', '&:hover': { transform: 'translateY(-4px)', transition: '0.3s' } }}
             onClick={() => {
               onFilterChange({ ...filters, type: 'pitcher' });
-              navigate('/predictions/pitchers');
+              navigate('/prospects/pitchers');
             }}
           >
             <Typography variant="h5" gutterBottom color="primary">
